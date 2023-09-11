@@ -36,6 +36,7 @@ void matacc_cache32(poly* r, const polyvec *b, polyvec *b_prime, unsigned char i
 
   xof_squeezeblocks(buf, 1, &state);
 
+  // 첫번째 누적의 경우, 16-bit * 16-bit를 수행한 후, 32-bit 결과값을 그대로 누적함
   matacc_asm_cache_16_32(r_tmp, b->vec[j].coeffs, c, buf, zetas, &state, b_prime->vec[j].coeffs);
 
   // 32-32 KYBER_K - 2 times
@@ -47,7 +48,8 @@ void matacc_cache32(poly* r, const polyvec *b, polyvec *b_prime, unsigned char i
       xof_absorb(&state, seed, j, i);
 
     xof_squeezeblocks(buf, 1, &state);
-
+    
+    // 두번째부터 마지막을 제외한 다항식 곱셈에 대해 16-bit * 16-bit 곱셈을 수행한 후, 기존 값이 누적되어있는 32-bit 배열에 누적하여 저장
     matacc_asm_cache_32_32(r_tmp, b->vec[j].coeffs, c, buf, zetas, &state, b_prime->vec[j].coeffs);
   }
 
@@ -60,6 +62,7 @@ void matacc_cache32(poly* r, const polyvec *b, polyvec *b_prime, unsigned char i
 
   xof_squeezeblocks(buf, 1, &state);
 
+  // 마지막 연산의 경우, 16-bit*16-bit 곱셈을 수행한 후, 32-bit 배열에 누적한 후 최종적으로 감산을 수행하여 16-bit 배열에 저장함
   matacc_asm_cache_32_16(r->coeffs, b->vec[j].coeffs, c, buf, zetas, &state, b_prime->vec[j].coeffs, r_tmp);
 }
 
